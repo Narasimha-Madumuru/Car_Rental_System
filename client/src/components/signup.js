@@ -38,7 +38,7 @@ function Signup({ goLogin }) {
 
   try {
 
-    const response = await axios.post("http://localhost:5000/signup", user);
+    const response = await axios.post("https://car-rental-system.onrender.com/signup", user);
 
     alert("✅ Signup Successful\n✔ Account Created Successfully");
 

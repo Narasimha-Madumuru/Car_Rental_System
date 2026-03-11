@@ -9,7 +9,7 @@ app.use(express.json());
 
 /* MongoDB Connection */
 
-mongoose.connect("mongodb://127.0.0.1:27017/carRentalDB")
+mongoose.connect("mongodb+srv://Narasimha:Narasimhaking123123@car-rental-cluster.znbvw7h.mongodb.net/carRentalDB")
 .then(() => {
     console.log("MongoDB Connected");
 })
@@ -86,14 +86,6 @@ app.post("/login", async (req, res) => {
 
     const user = await User.findOne({ username });
 
-    const passwordMatch = await User.findOne({ password });
-
-    if (!user && !passwordMatch) {
-      return res.status(401).json({
-        message: "Login Failed"
-      });
-    }
-
     if (!user) {
       return res.status(401).json({
         message: "Invalid Username"
@@ -119,13 +111,12 @@ app.post("/login", async (req, res) => {
   }
 
 });
-
 /* SERVER PORT */
 
-app.listen(5000, () => {
+const PORT = process.env.PORT || 5000;
 
-    console.log("Server running on port 5000");
-
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
 
 app.get("/", (req, res) => {
