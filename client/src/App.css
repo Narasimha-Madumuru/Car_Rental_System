@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500&display=swap');
+body{
+  margin:0;
+  padding:0;
+  font-family:'Poppins', sans-serif;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  background-image:url("https://images.unsplash.com/photo-1503376780353-7e6692767b70");
+  background-size:cover;
+  background-position:center;
+}
+
+/* Login card */
+
+.container{
+
+  width:350px;
+  padding:40px;
+  border-radius:15px;
+
+  background:rgba(0,0,0,0.65);
+  backdrop-filter:blur(10px);
+
+  text-align:center;
+
+  box-shadow:0 15px 40px rgba(0,0,0,0.6);
+}
+
+/* Title */
+
+h2{
+  color:#ffffff;
+  font-family:'Orbitron', sans-serif;
+  margin-bottom:25px;
+  letter-spacing:2px;
+}
+
+/* Inputs */
+
+input{
+
+  width:100%;
+  padding:12px;
+  margin:12px 0;
+
+  border:none;
+  border-radius:8px;
+
+  background:rgba(255,255,255,0.1);
+  color:white;
+
+  font-size:15px;
+}
+
+input::placeholder{
+  color:#ccc;
+}
+
+/* Input focus */
+
+input:focus{
+  outline:none;
+  border:1px solid #00c3ff;
+  box-shadow:0 0 10px #00c3ff;
+}
+
+/* Button */
+
+button{
+
+  width:100%;
+  padding:12px;
+  margin-top:15px;
+
+  border:none;
+  border-radius:8px;
+
+  background:linear-gradient(45deg,#ff4b2b,#ff416c);
+
+  color:white;
+  font-size:16px;
+  font-weight:bold;
+
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+
+  transform:scale(1.05);
+  box-shadow:0 5px 15px rgba(0,0,0,0.5);
+
+}
+
+/* Signup link */
+
+p{
+  margin-top:20px;
+  color:white;
+}
+
+span{
+  color:#00c3ff;
+  cursor:pointer;
+  font-weight:bold;
+}
