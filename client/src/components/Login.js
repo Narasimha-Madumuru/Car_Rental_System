@@ -11,37 +11,30 @@ function Login({ showSignup }) {
     try {
 
       const response = await axios.post("https://car-rental-system-bd19.onrender.com/login", {
-        username: username,
-        password: password
+        username,
+        password
       });
 
-      alert("✅ Login Successful");
+      const message = response.data.message;
+
+      if (message === "Login Successful") {
+        alert("✅ Login Successful");
+      }
+      else if (message === "Invalid Username") {
+        alert("⚠️ Invalid Username");
+      }
+      else if (message === "Invalid Password") {
+        alert("⚠️ Invalid Password");
+      }
+      else {
+        alert("❌ Login Failed");
+      }
 
     } catch (error) {
 
-  if (error.response) {
+      alert("⚠️ Server not responding");
 
-    const message = error.response.data.message;
-
-    if (message === "Invalid Username") {
-      alert("⚠️ Invalid Username");
     }
-
-    else if (message === "Invalid Password") {
-      alert("⚠️ Invalid Password");
-    }
-
-    else {
-      alert("❌ Login Failed");
-    }
-
-  } else {
-
-    alert("⚠️ Server not responding");
-
-  }
-
-}
 
     setUsername("");
     setPassword("");
@@ -71,14 +64,12 @@ function Login({ showSignup }) {
       <button onClick={handleLogin}>Login</button>
 
       <p>
-        New user ?
-        <span onClick={showSignup}> Sign Up</span>
+        New user ? <span onClick={showSignup}>Sign Up</span>
       </p>
 
     </div>
 
   );
-
 }
 
 export default Login;

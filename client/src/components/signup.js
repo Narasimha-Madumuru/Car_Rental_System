@@ -19,38 +19,26 @@ function Signup({ goLogin }) {
 
   const handleSignup = async () => {
 
-  let missingFields = [];
+    try {
 
-  if(!user.firstName) missingFields.push("First Name");
-  if(!user.lastName) missingFields.push("Last Name");
-  if(!user.username) missingFields.push("Username");
-  if(!user.age) missingFields.push("Age");
-  if(!user.dob) missingFields.push("Date of Birth");
-  if(!user.email) missingFields.push("Email");
-  if(!user.password) missingFields.push("Password");
+      const response = await axios.post(
+        "https://car-rental-system-bd19.onrender.com/signup",
+        user
+      );
 
-  if(missingFields.length > 0){
+      alert(response.data.message);
 
-    alert("⚠️ Please fill the following fields:\n\n" + missingFields.join("\n"));
+      if (response.data.message === "✅ Signup Successful") {
+        goLogin();
+      }
 
-    return;
-  }
+    } catch (error) {
 
-  try {
+      alert("⚠️ Server not responding");
 
-    const response = await axios.post("https://car-rental-system-bd19.onrender.com/signup", user);
+    }
 
-    alert("✅ Signup Successful\n✔ Account Created Successfully");
-
-    goLogin();
-
-  } catch (error) {
-
-    alert("⚠️ " + error.response.data.message);
-
-  }
-
-};
+  };
 
   return (
 
@@ -58,19 +46,18 @@ function Signup({ goLogin }) {
 
       <h2>Create Account</h2>
 
-      <input name="firstName" placeholder="First Name" onChange={handleChange} />
-      <input name="lastName" placeholder="Last Name" onChange={handleChange} />
-      <input name="username" placeholder="Username" onChange={handleChange} />
-      <input name="age" placeholder="Age" onChange={handleChange} />
-      <input name="dob" type="date" onChange={handleChange} />
-      <input name="email" placeholder="Email" onChange={handleChange} />
-      <input name="password" type="password" placeholder="Password" onChange={handleChange} />
+      <input name="firstName" placeholder="First Name" onChange={handleChange}/>
+      <input name="lastName" placeholder="Last Name" onChange={handleChange}/>
+      <input name="username" placeholder="Username" onChange={handleChange}/>
+      <input name="age" placeholder="Age" onChange={handleChange}/>
+      <input name="dob" type="date" onChange={handleChange}/>
+      <input name="email" placeholder="Email" onChange={handleChange}/>
+      <input name="password" type="password" placeholder="Password" onChange={handleChange}/>
 
       <button onClick={handleSignup}>Sign Up</button>
 
       <p>
-        Already have an account ?
-        <span onClick={goLogin}> Login</span>
+        Already have an account ? <span onClick={goLogin}>Login</span>
       </p>
 
     </div>
