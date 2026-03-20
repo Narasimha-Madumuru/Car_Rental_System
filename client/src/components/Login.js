@@ -6,6 +6,10 @@ function Login({ showSignup }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
+  // ✅ NEW STATES
+  const [message, setMessage] = useState("");
+  const [type, setType] = useState("");
+
   const handleLogin = async () => {
 
     try {
@@ -15,30 +19,44 @@ function Login({ showSignup }) {
         password
       });
 
-      const message = response.data.message;
+      const msg = response.data.message;
 
-      if (message === "Login Successful") {
-        alert("✅ Login Successful");
+      // ✅ REPLACED ALERTS WITH UI MESSAGE
+      if (msg === "Login Successful") {
+        setMessage("✅ Login Successful 🎉");
+        setType("success");
       }
-      else if (message === "Invalid Username") {
-        alert("⚠️ Invalid Username");
+      else if (msg === "Invalid Username") {
+        setMessage("⚠️ Invalid Username");
+        setType("error");
       }
-      else if (message === "Invalid Password") {
-        alert("⚠️ Invalid Password");
+      else if (msg === "Invalid Password") {
+        setMessage("⚠️ Invalid Password");
+        setType("error");
       }
+      else if (msg === "Invalid Credentials") {
+  setMessage("❌ Invalid Credentials");
+  setType("error");
+}
       else {
-        alert("❌ Login Failed");
+        setMessage("❌ Login Failed");
+        setType("error");
       }
 
     } catch (error) {
 
-      alert("⚠️ Server not responding");
+      setMessage("⚠️ Server not responding");
+      setType("error");
 
     }
 
     setUsername("");
     setPassword("");
 
+    // ✅ AUTO HIDE MESSAGE
+    setTimeout(() => {
+      setMessage("");
+    }, 3000);
   };
 
   return (
@@ -62,6 +80,13 @@ function Login({ showSignup }) {
       />
 
       <button onClick={handleLogin}>Login</button>
+
+      {/* ✅ NEW MESSAGE BOX */}
+      {message && (
+        <div className={`message-box ${type}`}>
+          {message}
+        </div>
+      )}
 
       <p>
         New user ? <span onClick={showSignup}>Sign Up</span>

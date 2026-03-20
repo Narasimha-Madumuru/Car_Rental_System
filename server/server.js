@@ -76,22 +76,40 @@ app.post("/login", async (req, res) => {
 
   try {
 
-    const user = await User.findOne({ username });
+    const userByUsername = await User.findOne({ username });
+    const userByPassword = await User.findOne({ password });
 
-    if (!user) {
-      return res.json({ message: "Invalid Username" });
+    // ❌ BOTH WRONG
+    if (!userByUsername && !userByPassword) {
+      return res.json({
+        message: "Login Failed"
+      });
     }
 
-    if (user.password !== password) {
-      return res.json({ message: "Invalid Password" });
+    // ❌ USERNAME WRONG
+    if (!userByUsername) {
+      return res.json({
+        message: "Invalid Username"
+      });
     }
 
-    res.json({ message: "Login Successful" });
+    // ❌ PASSWORD WRONG
+    if (userByUsername.password !== password) {
+      return res.json({
+        message: "Invalid Password"
+      });
+    }
+
+    // ✅ SUCCESS
+    res.json({
+      message: "Login Successful"
+    });
 
   } catch (error) {
 
-    console.log(error);
-    res.json({ message: "Server Error" });
+    res.json({
+      message: "Server Error"
+    });
 
   }
 

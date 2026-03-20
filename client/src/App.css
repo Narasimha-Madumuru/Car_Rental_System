@@ -107,3 +107,35 @@ span{
   cursor:pointer;
   font-weight:bold;
 }
+
+.message-box {
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 10px;
+  text-align: center;
+  font-weight: bold;
+  animation: fadeIn 0.4s ease;
+}
+
+.message-box.success {
+  background: rgba(0, 255, 100, 0.2);
+  color: #00ff88;
+  border: 1px solid #00ff88;
+}
+
+.message-box.error {
+  background: rgba(255, 0, 0, 0.2);
+  color: #ff4b4b;
+  border: 1px solid #ff4b4b;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
