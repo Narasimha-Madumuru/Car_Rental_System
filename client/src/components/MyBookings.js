@@ -1,21 +1,61 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function MyBookings() {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("bookings") || "[]");
-    setBookings(saved.reverse());
-    window.scrollTo(0, 0);
-  }, []);
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    if (!user) {
+      navigate("/");
+      return;
+    }
+    setCurrentUser(user);
+    fetchBookings(user.username);
+  }, [navigate]);
 
-  const cancelBooking = (id) => {
-    if (window.confirm("Are you sure you want to cancel this booking?")) {
-      const updated = bookings.filter(b => b.id !== id);
-      setBookings(updated);
-      localStorage.setItem("bookings", JSON.stringify(updated));
+  const fetchBookings = async (userId) => {
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        "https://car-rental-system-bd19.onrender.com/api/bookings/user",
+        { userId }
+      );
+      
+      if (response.data.success) {
+        setBookings(response.data.bookings);
+      } else {
+        setError(response.data.message);
+      }
+    } catch (error) {
+      setError("Failed to fetch bookings");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cancelBooking = async (bookingId) => {
+    if (!window.confirm("Are you sure you want to cancel this booking?")) return;
+    
+    try {
+      const response = await axios.post(
+        "https://car-rental-system-bd19.onrender.com/api/bookings/cancel",
+        { bookingId, userId: currentUser.username }
+      );
+      
+      if (response.data.success) {
+        // Refresh bookings list
+        fetchBookings(currentUser.username);
+      } else {
+        alert(response.data.message);
+      }
+    } catch (error) {
+      alert("Failed to cancel booking");
     }
   };
 
@@ -30,16 +70,30 @@ function MyBookings() {
     });
   };
 
+  if (loading) {
+    return (
+      <div style={styles.loadingContainer}>
+        <div style={styles.loader}></div>
+        <h2>Loading your bookings...</h2>
+      </div>
+    );
+  }
+
   return (
     <div style={styles.container}>
       <div style={styles.overlay}></div>
       
       <div style={styles.content}>
-        {/* Header Section - No Back Button */}
         <div style={styles.header}>
           <h1 style={styles.title}>📋 My Bookings</h1>
           <p style={styles.subtitle}>Manage your car rental reservations</p>
         </div>
+
+        {error && (
+          <div style={styles.errorBox}>
+            <p>{error}</p>
+          </div>
+        )}
 
         {bookings.length === 0 ? (
           <div style={styles.emptyState}>
@@ -59,7 +113,7 @@ function MyBookings() {
             
             <div style={styles.grid}>
               {bookings.map((booking) => (
-                <div key={booking.id} style={styles.bookingCard}>
+                <div key={booking.bookingId} style={styles.bookingCard}>
                   <div style={styles.statusBadge}>
                     <span style={styles.statusIcon}>✅</span>
                     <span style={styles.statusText}>{booking.status}</span>
@@ -67,7 +121,7 @@ function MyBookings() {
                   
                   <div style={styles.bookingId}>
                     <span style={styles.idLabel}>Booking ID:</span>
-                    <span style={styles.idValue}>{booking.id}</span>
+                    <span style={styles.idValue}>{booking.bookingId}</span>
                   </div>
                   
                   <div style={styles.carInfo}>
@@ -111,7 +165,7 @@ function MyBookings() {
                   <div style={styles.actionButtons}>
                     <button 
                       style={styles.cancelBtn}
-                      onClick={() => cancelBooking(booking.id)}
+                      onClick={() => cancelBooking(booking.bookingId)}
                     >
                       Cancel Booking
                     </button>
@@ -128,7 +182,6 @@ function MyBookings() {
           </>
         )}
 
-        {/* Back Button at Bottom */}
         <div style={styles.bottomBackButton}>
           <button onClick={() => navigate("/home")} style={styles.backButton}>
             ← Back to Home
@@ -182,8 +235,16 @@ const styles = {
   
   subtitle: {
     fontSize: "18px",
-    color: "rgba(255,255,255,0.8)",
-    marginBottom: "0"
+    color: "rgba(255,255,255,0.8)"
+  },
+  
+  errorBox: {
+    textAlign: "center",
+    padding: "15px",
+    background: "rgba(255,0,0,0.9)",
+    borderRadius: "10px",
+    color: "white",
+    marginBottom: "20px"
   },
   
   statsBar: {
@@ -376,19 +437,19 @@ const styles = {
   
   bottomBackButton: {
     textAlign: "center",
-    marginTop: "60px",
-    paddingTop: "30px"
+    marginTop: "50px",
+    paddingTop: "20px"
   },
   
   backButton: {
     display: "inline-block",
     width: "auto",
-    padding: "14px 40px",
+    padding: "12px 35px",
     background: "white",
     border: "none",
     borderRadius: "40px",
     cursor: "pointer",
-    fontSize: "16px",
+    fontSize: "15px",
     fontWeight: "600",
     color: "#ff4d4d",
     boxShadow: "0 5px 15px rgba(0,0,0,0.2)",
@@ -431,7 +492,37 @@ const styles = {
     fontSize: "16px",
     fontWeight: "600",
     cursor: "pointer"
+  },
+  
+  loadingContainer: {
+    width: "100vw",
+    height: "100vh",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    background: "linear-gradient(135deg, #667eea, #764ba2)",
+    color: "white"
+  },
+  
+  loader: {
+    width: "50px",
+    height: "50px",
+    border: "3px solid rgba(255,255,255,0.3)",
+    borderTop: "3px solid white",
+    borderRadius: "50%",
+    animation: "spin 1s linear infinite",
+    marginBottom: "20px"
   }
 };
+
+const styleSheet = document.createElement("style");
+styleSheet.textContent = `
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+document.head.appendChild(styleSheet);
 
 export default MyBookings;

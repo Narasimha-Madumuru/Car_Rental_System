@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function Booking() {
   const location = useLocation();
   const navigate = useNavigate();
   const { car, budget, fuel, type, preferredFeatures } = location.state || {};
-
+  
   const [days, setDays] = useState(1);
   const [totalPrice, setTotalPrice] = useState(0);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [bookingId, setBookingId] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  
+  // Get current user from localStorage (set after login)
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     if (!car) {
@@ -18,25 +24,53 @@ function Booking() {
     }
     setTotalPrice(car.pricePerDay * days);
     window.scrollTo(0, 0);
+    
+    // Get user from localStorage
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    if (!user) {
+      navigate("/");
+    }
+    setCurrentUser(user);
   }, [days, car, navigate]);
 
-  const handleConfirmBooking = () => {
+  const handleConfirmBooking = async () => {
+    if (!currentUser) {
+      alert("Please login again");
+      navigate("/");
+      return;
+    }
+    
+    setIsLoading(true);
+    setError("");
+    
     const newBookingId = "BOOK" + Math.random().toString(36).substr(2, 8).toUpperCase();
     setBookingId(newBookingId);
     
-    const booking = {
-      id: newBookingId,
+    const bookingData = {
+      bookingId: newBookingId,
       car: car,
+      userId: currentUser.username,
+      userName: currentUser.firstName + " " + currentUser.lastName,
       days: days,
-      totalPrice: totalPrice,
-      bookingDate: new Date().toISOString(),
-      status: "Confirmed"
+      totalPrice: totalPrice
     };
     
-    const bookings = JSON.parse(localStorage.getItem("bookings") || "[]");
-    bookings.push(booking);
-    localStorage.setItem("bookings", JSON.stringify(bookings));
-    setBookingConfirmed(true);
+    try {
+      const response = await axios.post(
+        "https://car-rental-system-bd19.onrender.com/api/bookings/create",
+        bookingData
+      );
+      
+      if (response.data.success) {
+        setBookingConfirmed(true);
+      } else {
+        setError(response.data.message);
+      }
+    } catch (error) {
+      setError("Failed to save booking. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (bookingConfirmed) {
@@ -67,15 +101,18 @@ function Booking() {
       <div style={styles.overlay}></div>
       
       <div style={styles.content}>
-        {/* Header Section */}
         <div style={styles.header}>
           <h1 style={styles.title}>📝 Complete Your Booking</h1>
           <p style={styles.subtitle}>Review and confirm your car rental details</p>
         </div>
 
-        {/* Booking Card */}
+        {error && (
+          <div style={styles.errorBox}>
+            <p>{error}</p>
+          </div>
+        )}
+
         <div style={styles.bookingCard}>
-          {/* Car Image */}
           <div style={styles.carImageContainer}>
             <img 
               src={car.image || "https://via.placeholder.com/600x300?text=Car"} 
@@ -90,7 +127,6 @@ function Booking() {
             </div>
           </div>
           
-          {/* Car Details */}
           <div style={styles.carInfo}>
             <h2 style={styles.carModel}>{car.model}</h2>
             <p style={styles.carBrand}>{car.brand}</p>
@@ -116,7 +152,6 @@ function Booking() {
               )}
             </div>
             
-            {/* Features */}
             <div style={styles.featuresSection}>
               <h4 style={styles.featuresTitle}>✨ Key Features</h4>
               <div style={styles.featuresList}>
@@ -127,7 +162,6 @@ function Booking() {
             </div>
           </div>
           
-          {/* Rental Section */}
           <div style={styles.rentalSection}>
             <h3 style={styles.rentalTitle}>Rental Details</h3>
             
@@ -169,19 +203,18 @@ function Booking() {
             </div>
           </div>
           
-          {/* Confirm Button */}
           <button 
-            style={styles.confirmBtn}
+            style={{...styles.confirmBtn, opacity: isLoading ? 0.6 : 1}}
             onClick={handleConfirmBooking}
+            disabled={isLoading}
           >
-            Confirm Booking →
+            {isLoading ? "Processing..." : "Confirm Booking →"}
           </button>
         </div>
 
-        {/* Back Button at Bottom - Goes back to CarResults with filter data */}
         <div style={styles.bottomBackButton}>
           <button 
-            onClick={() => navigate("/CarResults", { 
+            onClick={() => navigate("/carresults", { 
               state: { budget, fuel, type, preferredFeatures } 
             })} 
             style={styles.backButton}
@@ -238,6 +271,15 @@ const styles = {
   subtitle: {
     fontSize: "16px",
     color: "rgba(255,255,255,0.8)"
+  },
+  
+  errorBox: {
+    textAlign: "center",
+    padding: "15px",
+    background: "rgba(255,0,0,0.9)",
+    borderRadius: "10px",
+    color: "white",
+    marginBottom: "20px"
   },
   
   bookingCard: {
@@ -338,7 +380,7 @@ const styles = {
   },
   
   rentalSection: {
-    background: "#525455",
+    background: "#f8f9fa",
     padding: "25px",
     margin: "0 25px 25px 25px",
     borderRadius: "15px"
@@ -347,7 +389,7 @@ const styles = {
   rentalTitle: {
     fontSize: "18px",
     fontWeight: "600",
-    color: "#fffafa",
+    color: "#333",
     marginBottom: "20px"
   },
   
@@ -363,7 +405,7 @@ const styles = {
   daysLabel: {
     fontSize: "14px",
     fontWeight: "500",
-    color: "#ffffff"
+    color: "#555"
   },
   
   daysControls: {
@@ -376,7 +418,7 @@ const styles = {
     width: "36px",
     height: "36px",
     background: "white",
-    border: "1px solid #852222",
+    border: "1px solid #ddd",
     borderRadius: "10px",
     fontSize: "18px",
     fontWeight: "bold",

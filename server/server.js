@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ========== MONGODB CONNECTION ==========
+// MongoDB Connection
 const MONGODB_URI = "mongodb+srv://Narasimha:Narasimha_962004@car-rental-cluster.znbvw7h.mongodb.net/carRentalDB?retryWrites=true&w=majority";
 
 mongoose.connect(MONGODB_URI)
@@ -42,6 +42,29 @@ const carSchema = new mongoose.Schema({
 });
 const Car = mongoose.model("cars", carSchema);
 
+// ========== BOOKING SCHEMA ==========
+const bookingSchema = new mongoose.Schema({
+  bookingId: { type: String, required: true, unique: true },
+  car: {
+    model: String,
+    brand: String,
+    carType: String,
+    fuelType: String,
+    transmission: String,
+    seats: Number,
+    pricePerDay: Number,
+    image: String,
+    features: [String]
+  },
+  userId: { type: String, required: true },
+  userName: { type: String, required: true },
+  days: { type: Number, required: true },
+  totalPrice: { type: Number, required: true },
+  bookingDate: { type: Date, default: Date.now },
+  status: { type: String, default: "Confirmed" }
+});
+const Booking = mongoose.model("bookings", bookingSchema);
+
 // ========== SIGNUP API ==========
 app.post("/signup", async (req, res) => {
   const { firstName, lastName, username, age, dob, email, password } = req.body;
@@ -52,7 +75,7 @@ app.post("/signup", async (req, res) => {
     }
     const newUser = new User({ firstName, lastName, username, age, dob, email, password });
     await newUser.save();
-    res.json({ message: "✅ Signup Successful" });
+    res.json({ message: "✅ Signup Successful", user: { username, email } });
   } catch (error) {
     console.log(error);
     res.json({ message: "⚠️ Error creating account" });
@@ -66,7 +89,15 @@ app.post("/login", async (req, res) => {
     const user = await User.findOne({ username });
     if (!user) return res.json({ message: "Invalid Username" });
     if (user.password !== password) return res.json({ message: "Invalid Password" });
-    res.json({ message: "Login Successful", user: { username: user.username, email: user.email } });
+    res.json({ 
+      message: "Login Successful", 
+      user: { 
+        username: user.username, 
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName
+      } 
+    });
   } catch (error) {
     res.json({ message: "Server Error" });
   }
@@ -95,16 +126,11 @@ app.post("/api/cars/filter", async (req, res) => {
   }
 });
 
-// ========== ADD 300 CARS TO DATABASE (RUN ONCE) ==========
+// ========== ADD 300 CARS API ==========
 app.post("/api/cars/add-all", async (req, res) => {
   try {
-    // Clear existing cars
     await Car.deleteMany({});
-    console.log("Cleared existing cars");
     
-    const allCars = [];
-    
-    // Budget Ranges
     const budgets = [
       { name: "₹500 - ₹1000", min: 500, max: 1000 },
       { name: "₹1000 - ₹2000", min: 1000, max: 2000 },
@@ -119,8 +145,7 @@ app.post("/api/cars/add-all", async (req, res) => {
         brands: [
           { name: "Maruti Suzuki", models: ["Swift", "Baleno", "Ignis", "Wagon R"] },
           { name: "Hyundai", models: ["i10", "i20"] },
-          { name: "Tata", models: ["Altroz", "Tiago"] },
-          { name: "Honda", models: ["Jazz"] }
+          { name: "Tata", models: ["Altroz", "Tiago"] }
         ],
         seats: 5,
         features: {
@@ -133,8 +158,7 @@ app.post("/api/cars/add-all", async (req, res) => {
         brands: [
           { name: "Honda", models: ["City", "Amaze"] },
           { name: "Hyundai", models: ["Verna", "Aura"] },
-          { name: "Maruti Suzuki", models: ["Ciaz", "Dzire"] },
-          { name: "Skoda", models: ["Slavia"] }
+          { name: "Maruti Suzuki", models: ["Ciaz", "Dzire"] }
         ],
         seats: 5,
         features: {
@@ -148,8 +172,7 @@ app.post("/api/cars/add-all", async (req, res) => {
           { name: "Hyundai", models: ["Creta", "Venue"] },
           { name: "Kia", models: ["Seltos", "Sonet"] },
           { name: "Tata", models: ["Harrier", "Nexon"] },
-          { name: "Mahindra", models: ["XUV700", "Thar"] },
-          { name: "MG", models: ["Hector"] }
+          { name: "Mahindra", models: ["XUV700", "Thar"] }
         ],
         seats: 5,
         features: {
@@ -162,8 +185,7 @@ app.post("/api/cars/add-all", async (req, res) => {
         brands: [
           { name: "Mercedes-Benz", models: ["E-Class", "C-Class", "GLA"] },
           { name: "BMW", models: ["3 Series", "5 Series", "X1"] },
-          { name: "Audi", models: ["A4", "A6", "Q3"] },
-          { name: "Jaguar", models: ["XF", "F-Pace"] }
+          { name: "Audi", models: ["A4", "A6", "Q3"] }
         ],
         seats: 5,
         features: {
@@ -176,9 +198,7 @@ app.post("/api/cars/add-all", async (req, res) => {
         brands: [
           { name: "Porsche", models: ["911", "Cayman"] },
           { name: "Ferrari", models: ["Roma", "Portofino"] },
-          { name: "Lamborghini", models: ["Urus", "Huracan"] },
-          { name: "Audi", models: ["R8"] },
-          { name: "BMW", models: ["M4", "Z4"] }
+          { name: "Lamborghini", models: ["Urus", "Huracan"] }
         ],
         seats: 4,
         features: {
@@ -193,12 +213,10 @@ app.post("/api/cars/add-all", async (req, res) => {
       "https://images.unsplash.com/photo-1580273916550-e323be2ae537",
       "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2",
       "https://images.unsplash.com/photo-1580274455191-1c62238fa333",
-      "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a",
-      "https://images.unsplash.com/photo-1599819811279-d5ad9ccf8387",
-      "https://images.unsplash.com/photo-1617469767053-d3b523a0b982",
-      "https://images.unsplash.com/photo-1494976388531-d1058494cdd8"
+      "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a"
     ];
     
+    const allCars = [];
     let carId = 0;
     
     for (const budget of budgets) {
@@ -211,27 +229,17 @@ app.post("/api/cars/add-all", async (req, res) => {
             }
           }
           
-          // Take first 5 models for this combination
           const selectedModels = allModels.slice(0, 5);
           
           for (let i = 0; i < selectedModels.length; i++) {
             const carData = selectedModels[i];
-            
-            let price = Math.floor(Math.random() * (budget.max - budget.min + 1) + budget.min);
-            
-            let seats = typeData.seats;
-            if (Array.isArray(typeData.seats)) {
-              seats = typeData.seats[0];
-            }
-            
+            const price = Math.floor(Math.random() * (budget.max - budget.min + 1) + budget.min);
+            const seats = typeData.seats;
             const features = [...(typeData.features[fuel] || typeData.features["Petrol"])];
             const extraFeatures = ["Sunroof", "Touchscreen", "Reverse Camera", "Bluetooth"];
-            const randomFeature = extraFeatures[Math.floor(Math.random() * extraFeatures.length)];
-            if (!features.includes(randomFeature)) features.push(randomFeature);
-            
-            let transmission = fuel === "Electric" ? "Automatic" : (Math.random() > 0.5 ? "Manual" : "Automatic");
-            const image = images[carId % images.length] + `?w=600&h=350&fit=crop&id=${carId}`;
-            const rating = 3.5 + Math.random() * 1.5;
+            features.push(extraFeatures[Math.floor(Math.random() * extraFeatures.length)]);
+            const transmission = fuel === "Electric" ? "Automatic" : (Math.random() > 0.5 ? "Manual" : "Automatic");
+            const image = images[carId % images.length];
             
             allCars.push({
               model: `${carData.brand} ${carData.model}`,
@@ -244,7 +252,7 @@ app.post("/api/cars/add-all", async (req, res) => {
               image: image,
               isAvailable: true,
               features: features.slice(0, 4),
-              rating: parseFloat(rating.toFixed(1))
+              rating: parseFloat((3.5 + Math.random() * 1.5).toFixed(1))
             });
             carId++;
           }
@@ -253,16 +261,8 @@ app.post("/api/cars/add-all", async (req, res) => {
     }
     
     await Car.insertMany(allCars);
-    console.log(`✅ Added ${allCars.length} cars to database`);
-    
-    res.json({ 
-      success: true, 
-      message: `Successfully added ${allCars.length} cars to database!`,
-      count: allCars.length
-    });
-    
+    res.json({ success: true, message: `Added ${allCars.length} cars`, count: allCars.length });
   } catch (error) {
-    console.error("Error:", error);
     res.json({ success: false, message: error.message });
   }
 });
@@ -277,11 +277,66 @@ app.get("/api/cars/count", async (req, res) => {
   }
 });
 
-// ========== GET ALL CARS ==========
-app.get("/api/cars/all", async (req, res) => {
+// ========== CREATE BOOKING API ==========
+app.post("/api/bookings/create", async (req, res) => {
+  const { bookingId, car, userId, userName, days, totalPrice } = req.body;
+  
   try {
-    const cars = await Car.find();
-    res.json({ success: true, cars, count: cars.length });
+    const newBooking = new Booking({
+      bookingId,
+      car,
+      userId,
+      userName,
+      days,
+      totalPrice,
+      bookingDate: new Date(),
+      status: "Confirmed"
+    });
+    
+    await newBooking.save();
+    res.json({ success: true, message: "Booking saved to database", booking: newBooking });
+  } catch (error) {
+    console.error("Error saving booking:", error);
+    res.json({ success: false, message: error.message });
+  }
+});
+
+// ========== GET USER BOOKINGS API ==========
+app.post("/api/bookings/user", async (req, res) => {
+  const { userId } = req.body;
+  
+  try {
+    const bookings = await Booking.find({ userId }).sort({ bookingDate: -1 });
+    res.json({ success: true, bookings });
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    res.json({ success: false, message: error.message, bookings: [] });
+  }
+});
+
+// ========== CANCEL BOOKING API ==========
+app.post("/api/bookings/cancel", async (req, res) => {
+  const { bookingId, userId } = req.body;
+  
+  try {
+    const deleted = await Booking.findOneAndDelete({ bookingId, userId });
+    
+    if (deleted) {
+      res.json({ success: true, message: "Booking cancelled successfully" });
+    } else {
+      res.json({ success: false, message: "Booking not found" });
+    }
+  } catch (error) {
+    console.error("Error cancelling booking:", error);
+    res.json({ success: false, message: error.message });
+  }
+});
+
+// ========== GET ALL BOOKINGS (Admin) ==========
+app.get("/api/bookings/all", async (req, res) => {
+  try {
+    const bookings = await Booking.find().sort({ bookingDate: -1 });
+    res.json({ success: true, bookings, count: bookings.length });
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
