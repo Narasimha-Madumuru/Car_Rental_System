@@ -9,10 +9,20 @@ function Login({ showSignup }) {
 
   const [message, setMessage] = useState("");
   const [type, setType] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
 
   const handleLogin = async () => {
+
+    if (!username.trim() || !password.trim()) {
+      setMessage("⚠️ Please enter username and password");
+      setType("error");
+      setTimeout(() => setMessage(""), 3000);
+      return;
+    }
+
+    setIsLoading(true);
 
     try {
 
@@ -31,40 +41,38 @@ function Login({ showSignup }) {
           navigate("/home");
         }, 1000);
       }
-
       else if (msg === "Invalid Username") {
         setMessage("⚠️ Invalid Username");
         setType("error");
       }
-
       else if (msg === "Invalid Password") {
         setMessage("⚠️ Invalid Password");
         setType("error");
       }
-
       else if (msg === "Invalid Credentials") {
         setMessage("❌ Invalid Credentials");
         setType("error");
       }
-
       else {
         setMessage("❌ Login Failed");
         setType("error");
       }
 
     } catch (error) {
-
       setMessage("⚠️ Server not responding");
       setType("error");
-
+    } finally {
+      setIsLoading(false);
+      setUsername("");
+      setPassword("");
+      setTimeout(() => setMessage(""), 3000);
     }
+  };
 
-    setUsername("");
-    setPassword("");
-
-    setTimeout(() => {
-      setMessage("");
-    }, 3000);
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !isLoading) {
+      handleLogin();
+    }
   };
 
   return (
@@ -81,6 +89,8 @@ function Login({ showSignup }) {
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          onKeyPress={handleKeyPress}
+          disabled={isLoading}
         />
 
         <input
@@ -89,10 +99,16 @@ function Login({ showSignup }) {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onKeyPress={handleKeyPress}
+          disabled={isLoading}
         />
 
-        <button style={styles.button} onClick={handleLogin}>
-          Login
+        <button 
+          style={{...styles.button, opacity: isLoading ? 0.6 : 1}} 
+          onClick={handleLogin}
+          disabled={isLoading}
+        >
+          {isLoading ? "Logging in..." : "Login"}
         </button>
 
         {message && (
@@ -121,10 +137,10 @@ export default Login;
 
 const styles = {
   container: {
-    width: "100vw",        // 🔥 IMPORTANT
+    width: "100vw",
     height: "100vh",
-    margin: "0",           // 🔥 IMPORTANT
-    padding: "0",
+    margin: 0,
+    padding: 0,
     backgroundImage: "url('https://images.unsplash.com/photo-1503376780353-7e6692767b70')",
     backgroundSize: "cover",
     backgroundPosition: "center",
@@ -135,47 +151,56 @@ const styles = {
   },
 
   card: {
-    background: "rgba(0,0,0,0.7)",
-    padding: "35px",
-    borderRadius: "15px",
+    background: "rgba(0,0,0,0.75)",
+    padding: "45px",
+    borderRadius: "20px",
     textAlign: "center",
-    width: "300px",
+    width: "380px",
     color: "white",
-    boxShadow: "0 10px 40px rgba(0,0,0,0.5)"
+    boxShadow: "0 15px 45px rgba(0,0,0,0.6)"
   },
 
   heading: {
-    marginBottom: "20px"
+    marginBottom: "25px",
+    fontSize: "26px",
+    fontWeight: "600"
   },
 
   input: {
     width: "100%",
-    padding: "10px",
-    margin: "10px 0",
-    borderRadius: "8px",
+    padding: "14px",
+    margin: "12px 0",
+    borderRadius: "10px",
     border: "none",
-    outline: "none"
+    outline: "none",
+    fontSize: "15px",
+    background: "rgba(255,255,255,0.15)",
+    color: "white"
   },
 
   button: {
     width: "100%",
-    padding: "10px",
-    marginTop: "10px",
-    borderRadius: "8px",
+    padding: "14px",
+    marginTop: "15px",
+    borderRadius: "10px",
     border: "none",
     backgroundColor: "#ff4d4d",
     color: "white",
     fontWeight: "bold",
-    cursor: "pointer"
+    fontSize: "16px",
+    cursor: "pointer",
+    transition: "0.3s"
   },
 
   message: {
-    marginTop: "10px",
-    fontWeight: "bold"
+    marginTop: "15px",
+    fontWeight: "bold",
+    fontSize: "14px"
   },
 
   text: {
-    marginTop: "15px"
+    marginTop: "20px",
+    fontSize: "14px"
   },
 
   link: {
