@@ -85,22 +85,33 @@ app.post("/signup", async (req, res) => {
 // ========== LOGIN API ==========
 // ========== LOGIN API ==========
 // ========== LOGIN API ==========
+// ========== LOGIN API ==========
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   
-  console.log("Login attempt:", username); // Debug log
+  console.log("Login attempt:", username);
   
   try {
     // Find user by username
     const user = await User.findOne({ username });
     
-    // Case 1: User not found
+    // Case 1: Username doesn't exist
     if (!user) {
+      // Check if this password exists in any user (to determine if both are wrong)
+      const anyUserWithPassword = await User.findOne({ password });
+      
+      if (!anyUserWithPassword) {
+        // Both username AND password are wrong
+        console.log("Both wrong:", username, password);
+        return res.json({ message: "Login Failed" });
+      }
+      
+      // Only username wrong, password exists in database
       console.log("User not found:", username);
       return res.json({ message: "Invalid Username" });
     }
     
-    // Case 2: Password incorrect
+    // Case 2: Username exists but password wrong
     if (user.password !== password) {
       console.log("Wrong password for:", username);
       return res.json({ message: "Invalid Password" });
