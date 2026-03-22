@@ -83,12 +83,31 @@ app.post("/signup", async (req, res) => {
 });
 
 // ========== LOGIN API ==========
+// ========== LOGIN API ==========
+// ========== LOGIN API ==========
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
+  
+  console.log("Login attempt:", username); // Debug log
+  
   try {
+    // Find user by username
     const user = await User.findOne({ username });
-    if (!user) return res.json({ message: "Invalid Username" });
-    if (user.password !== password) return res.json({ message: "Invalid Password" });
+    
+    // Case 1: User not found
+    if (!user) {
+      console.log("User not found:", username);
+      return res.json({ message: "Invalid Username" });
+    }
+    
+    // Case 2: Password incorrect
+    if (user.password !== password) {
+      console.log("Wrong password for:", username);
+      return res.json({ message: "Invalid Password" });
+    }
+    
+    // Case 3: Login successful
+    console.log("Login successful:", username);
     res.json({ 
       message: "Login Successful", 
       user: { 
@@ -98,7 +117,9 @@ app.post("/login", async (req, res) => {
         lastName: user.lastName
       } 
     });
+    
   } catch (error) {
+    console.error("Login error:", error);
     res.json({ message: "Server Error" });
   }
 });
