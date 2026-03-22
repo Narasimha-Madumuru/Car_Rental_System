@@ -11,7 +11,7 @@ import MyBookings from "./components/MyBookings";
 
 function App() {
   return (
-    <Router basename="/Car_Rental_System">
+    <Router>
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />

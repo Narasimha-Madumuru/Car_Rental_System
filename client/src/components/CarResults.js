@@ -55,6 +55,7 @@ function CarResults() {
   };
 
   const handleBookNow = (car) => {
+  console.log("Booking car:", car); // Debug log
   navigate("/booking", { 
     state: { 
       car: car,
